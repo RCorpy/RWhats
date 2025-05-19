@@ -13,18 +13,23 @@ class Conversation {
 
 // Message model
 class Message {
+  final String id;
+  final String conversationId;
   final String sender;
-  final String conversationId; // should match a Conversation.id
   final String text;
   final DateTime timestamp;
+  bool read;
 
   Message({
-    required this.sender,
+    required this.id,
     required this.conversationId,
+    required this.sender,
     required this.text,
     required this.timestamp,
+    this.read = false,
   });
 }
+
 
 
 

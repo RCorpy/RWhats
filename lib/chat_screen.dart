@@ -121,6 +121,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       final text = _controller.text.trim();
                       if (text.isNotEmpty) {
                         allMessages.add(Message(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
                           sender: widget.phoneNumber,
                           conversationId: widget.conversationId,
                           text: text,

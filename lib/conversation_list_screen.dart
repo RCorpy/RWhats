@@ -6,14 +6,37 @@ import 'login_screen.dart';
 import 'mock_data.dart';
 import 'models.dart';
 
-class ConversationListScreen extends StatelessWidget {
+/// Helper to group messages by conversation
+Map<String, List<Message>> groupMessagesByConversation(List<Message> messages) {
+  final map = <String, List<Message>>{};
+  for (var msg in messages) {
+    map.putIfAbsent(msg.conversationId, () => []).add(msg);
+  }
+  return map;
+}
+
+class ConversationListScreen extends StatefulWidget {
   final String phoneNumber;
 
   const ConversationListScreen({super.key, required this.phoneNumber});
 
   @override
+  State<ConversationListScreen> createState() => _ConversationListScreenState();
+}
+
+class _ConversationListScreenState extends State<ConversationListScreen> {
+  late Map<String, List<Message>> groupedMessages;
+
+  @override
+  void initState() {
+    super.initState();
+    groupedMessages = groupMessagesByConversation(allMessages);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final List<Conversation> conversations = allConversations;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('RWhats - Conversations'),
@@ -38,23 +61,53 @@ class ConversationListScreen extends StatelessWidget {
           final convoId = convo.id;
           final name = convo.name;
 
-          final lastMessages = allMessages
-              .where((msg) => msg.conversationId == convoId)
-              .toList()
-            ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          final lastMessages = groupedMessages[convoId] ?? [];
+          lastMessages.sort((a, b) => b.timestamp.compareTo(a.timestamp));
           final lastMessage = lastMessages.isNotEmpty ? lastMessages.first : null;
+
+          final isUnread = lastMessage != null && !lastMessage.read && lastMessage.sender != widget.phoneNumber;
+          final isSentByYou = lastMessage != null && lastMessage.sender == widget.phoneNumber;
 
           return ListTile(
             leading: CircleAvatar(
               backgroundImage: AssetImage(convo.profilePic),
             ),
-            title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(
-              lastMessage?.text ?? 'No messages yet',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.grey),
+            title: Text(
+              name,
+              style: TextStyle(
+                fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
+            subtitle: lastMessage != null
+                ? Row(
+                    children: [
+                      if (!isSentByYou)
+                        Container(
+                          margin: const EdgeInsets.only(right: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade100,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            lastMessage.sender,
+                            style: const TextStyle(fontSize: 10, color: Colors.blue),
+                          ),
+                        ),
+                      Expanded(
+                        child: Text(
+                          lastMessage.text,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: isUnread ? Colors.black : Colors.grey,
+                            fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : const Text('No messages yet'),
             trailing: lastMessage != null
                 ? Text(
                     '${lastMessage.timestamp.hour}:${lastMessage.timestamp.minute.toString().padLeft(2, '0')}',
@@ -66,7 +119,7 @@ class ConversationListScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (_) => ChatScreen(
-                    phoneNumber: phoneNumber,
+                    phoneNumber: widget.phoneNumber,
                     contactName: name,
                     conversationId: convoId,
                   ),
@@ -74,7 +127,7 @@ class ConversationListScreen extends StatelessWidget {
               );
             },
           );
-        }
+        },
       ),
     );
   }
