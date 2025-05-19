@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'chat_screen.dart';
 import 'login_screen.dart';
+import 'mock_data.dart';
+import 'models.dart';
 
 class ConversationListScreen extends StatelessWidget {
   final String phoneNumber;
@@ -11,12 +13,7 @@ class ConversationListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, String>> mockConversations = [
-    {'name': 'Alice', 'conversationId': '1'},
-    {'name': 'Bob', 'conversationId': '2'},
-    {'name': 'Charlie', 'conversationId': '3'},
-    ];
-
+    final List<Conversation> conversations = allConversations;
     return Scaffold(
       appBar: AppBar(
         title: const Text('RWhats - Conversations'),
@@ -35,26 +32,49 @@ class ConversationListScreen extends StatelessWidget {
         ],
       ),
       body: ListView.builder(
-        itemCount: mockConversations.length,
+        itemCount: conversations.length,
         itemBuilder: (context, index) {
-          final convo = mockConversations[index];
-          String name = convo['name']!;
+          final convo = conversations[index];
+          final convoId = convo.id;
+          final name = convo.name;
+
+          final lastMessages = allMessages
+              .where((msg) => msg.conversationId == convoId)
+              .toList()
+            ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          final lastMessage = lastMessages.isNotEmpty ? lastMessages.first : null;
+
           return ListTile(
-            title: Text(name),
+            leading: CircleAvatar(
+              backgroundImage: AssetImage(convo.profilePic),
+            ),
+            title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text(
+              lastMessage?.text ?? 'No messages yet',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.grey),
+            ),
+            trailing: lastMessage != null
+                ? Text(
+                    '${lastMessage.timestamp.hour}:${lastMessage.timestamp.minute.toString().padLeft(2, '0')}',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  )
+                : null,
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (_) => ChatScreen(
                     phoneNumber: phoneNumber,
-                    contactName: convo['name']!,
-                    conversationId: convo['conversationId']!, // pass correct ID
+                    contactName: name,
+                    conversationId: convoId,
                   ),
                 ),
               );
             },
           );
-        },
+        }
       ),
     );
   }
