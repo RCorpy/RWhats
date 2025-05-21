@@ -1,3 +1,5 @@
+import 'dart:io';
+
 // Conversation model
 class Conversation {
   final String id;
@@ -11,24 +13,35 @@ class Conversation {
   });
 }
 
-// Message model
+
+
 class Message {
   final String id;
-  final String conversationId;
   final String sender;
-  final String text;
+  final String conversationId;
+  final String? text;
   final DateTime timestamp;
-  bool read;
+
+  final File? file;
+  final String? fileName;
+  final bool? isImage;
+  final bool? isVideo;
+  final bool read; // <-- NUEVO
 
   Message({
     required this.id,
-    required this.conversationId,
     required this.sender,
-    required this.text,
+    required this.conversationId,
+    this.text,
     required this.timestamp,
-    this.read = false,
+    this.file,
+    this.fileName,
+    this.isImage,
+    this.isVideo,
+    this.read = false, // <-- default to false
   });
 }
+
 
 
 

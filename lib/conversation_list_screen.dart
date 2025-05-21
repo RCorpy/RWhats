@@ -96,7 +96,7 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
                         ),
                       Expanded(
                         child: Text(
-                          lastMessage.text,
+                          lastMessage.text!,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
